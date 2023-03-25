@@ -1,5 +1,5 @@
 {
-  "name": "@abhagsain/ai-cli",
+  "name": "ai-cli",
   "version": "1.2.3",
   "description": "Get answers for CLI commands from GPT3 right from your terminal",
   "author": "Anurag Bhagsain @abhagsain",
@@ -9,7 +9,7 @@
   "homepage": "https://github.com/abhagsain/ai-cli",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
-  "repository": "abhagsain/ai-cli",
+  "repository": "ai-cli",
   "files": [
     "/bin",
     "/dist",
