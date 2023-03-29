@@ -49,10 +49,9 @@ export default class AI extends Command {
           message: prompt,
           stream: false,
           clientOptions: {
-            accessToken: "-",
             clientToUse: "chatgpt-browser"
           },
-          shouldGenerateTitle: true
+          shouldGenerateTitle: false
         }),
         referrer: "http://10.0.0.246:8499/",
         referrerPolicy: "strict-origin-when-cross-origin",
@@ -61,10 +60,6 @@ export default class AI extends Command {
       });
 
       let dataJson = await data.json();
-      
-
-
-
       const code = /`(.*?)`/;
       const value = dataJson.response.trim();
       const match =
