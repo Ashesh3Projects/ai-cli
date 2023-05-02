@@ -21,13 +21,35 @@ export const getOpenAIKey = async (
   const filePath = getAPIConfigFilePath(configDir);
   if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
     const fileContent = await fs.readFile(filePath, "utf-8");
-    const [name, value] = fileContent?.split("=") || [];
-    if (name === "OPENAI_API_KEY") {
-      return value.trim();
+    const lines = fileContent?.split("\n") || [];
+    for (const line of lines) {
+      const [name, value] = line.split("=");
+      if (name === "OPENAI_API_KEY") {
+        return value.trim();
+      }
     }
   }
   return null;
 };
+
+
+export const getOpenAIBasePath = async (
+  configDir: string
+): Promise<string | null> => {
+  const filePath = getAPIConfigFilePath(configDir);
+  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+    const fileContent = await fs.readFile(filePath, "utf-8");
+    const lines = fileContent?.split("\n") || [];
+    for (const line of lines) {
+      const [name, value] = line.split("=");
+      if (name === "OPENAI_BASE_PATH") {
+        return value.trim();
+      }
+    }
+  }
+  return null;
+};
+
 
 export const getAPIConfigFilePath = (configDir: string): string =>
   path.join(configDir, ".ai-cli");

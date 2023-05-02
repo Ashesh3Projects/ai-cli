@@ -31,10 +31,30 @@ export default class Auth extends Command {
     ]);
 
     const { userAPIKey } = prompt;
-    fs.ensureFileSync(filePath);
-    if (userAPIKey) {
-      fs.writeFileSync(filePath, `OPENAI_API_KEY=${userAPIKey}`);
-    }
     this.log(`API Key is saved at ${chalk.bold.yellowBright(filePath)}`);
+
+    const message2 = "Please enter your OpenAI Base Path";
+    const prompt2 = await inquirer.prompt([
+      {
+        name: "userBasePath",
+        message2,
+        type: "password",
+        validate: (value: string) => {
+          if (!value.trim()) {
+            return "Please enter a valid base path";
+          }
+          return true;
+        },
+      },
+    ]);
+
+    const { userBasePath } = prompt2;
+    fs.ensureFileSync(filePath);
+    
+    if (userAPIKey && userBasePath) {
+      fs.writeFileSync(filePath, `OPENAI_API_KEY=${userAPIKey}\nOPENAI_BASE_PATH=${userBasePath}`);
+    }
+
+
   }
 }

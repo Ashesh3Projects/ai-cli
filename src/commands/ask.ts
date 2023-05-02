@@ -4,9 +4,10 @@ import * as inquirer from "inquirer";
 import {
   getCurrentModel,
   getDefaultCommandPrompt,
+  getOpenAIBasePath,
   getOpenAIKey,
 } from "../helpers/index";
-const { Configuration, OpenAIApi } = require("openai");
+import { Configuration, OpenAIApi } from "openai";
 
 export default class AI extends Command {
   static description = "Ask question to GPT3 from your terminal";
@@ -28,42 +29,34 @@ export default class AI extends Command {
   async getAnswersFromGPT3({
     question,
     API_KEY,
+    BASE_PATH,
   }: {
     question: string;
     API_KEY: string;
+    BASE_PATH: string;
   }): Promise<any> {
     const configuration = new Configuration({
+      basePath: BASE_PATH || process.env.OPENAI_BASE_PATH,
       apiKey: API_KEY || process.env.OPENAI_API_KEY,
     });
+    const openai = new OpenAIApi(configuration);
     const prompt = `${getDefaultCommandPrompt() + question.trim() + "\nA - "}`;
+    const { name: model } = getCurrentModel(this.config.configDir);
     try {
-      
-      let data =  await fetch("http://10.0.0.246:8498/conversation", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "*/*",
-          "Accept-Language": "en-US,en;q=0.9,hi;q=0.8,fr;q=0.7"
-        },
-        body: JSON.stringify({
-          message: prompt,
-          stream: false,
-          clientOptions: {
-            clientToUse: "chatgpt-browser"
-          },
-          shouldGenerateTitle: false
-        }),
-        referrer: "http://10.0.0.246:8499/",
-        referrerPolicy: "strict-origin-when-cross-origin",
-        mode: "cors",
-        credentials: "omit"
+      const response = await openai.createCompletion({
+        model: model,
+        prompt,
+        temperature: 0.8,
+        max_tokens: 64,
+        top_p: 1,
+        frequency_penalty: 0.5,
+        presence_penalty: 0,
+        stop: ['"""'],
       });
-
-      let dataJson = await data.json();
       const code = /`(.*?)`/;
-      const value = dataJson.response.trim();
-      const match =
-        value.match(code)?.length > 1 ? value.match(code)[1] : value;
+      const value = response?.data?.choices[0].text?.trim();
+      const matchR = value?.match(code);
+      const match = (matchR?.length && matchR?.length > 1) ? matchR[1] : value;
       return match;
     } catch (error: any) {
       throw new Error(JSON.stringify(error.response.data.error));
@@ -98,9 +91,10 @@ export default class AI extends Command {
 
   async run(): Promise<void> {
     const API_KEY = await getOpenAIKey(this.config.configDir);
-    if (!API_KEY) {
+    const BASE_PATH = await getOpenAIBasePath(this.config.configDir);
+    if (!API_KEY || !BASE_PATH) {
       this.log(
-        "You haven't set your OpenAI API key. Please login with",
+        "You haven't set your OpenAI API key or  base path. Please run " +
         chalk.bold.yellow("ai auth")
       );
       return;
@@ -112,6 +106,7 @@ export default class AI extends Command {
     const answer = await this.getAnswersFromGPT3({
       question: question.trim(),
       API_KEY,
+      BASE_PATH,
     });
     CliUx.ux.action.stop("");
     if (answer.toLowerCase().startsWith("sorry")) {
